@@ -10,6 +10,8 @@ services:
     build: ./app
     container_name: camieo-app
     restart: unless-stopped    
+    expose:
+      - "3000"
     environment:
       - NODE_ENV=production
       - DB_HOST=db
