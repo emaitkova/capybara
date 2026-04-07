@@ -9,9 +9,7 @@ services:
   app:
     build: ./app
     container_name: camieo-app
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
+    restart: unless-stopped    
     environment:
       - NODE_ENV=production
       - DB_HOST=db
