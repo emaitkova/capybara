@@ -1,15 +1,9 @@
 version: "3.8"
-
-# ══════════════════════════════════════════
-# CAMIEO.COM — Brainrot Game Platform
-# Coolify-ready docker-compose
-# ══════════════════════════════════════════
-
 services:
   app:
     build: ./app
     container_name: camieo-app
-    restart: unless-stopped    
+    restart: unless-stopped
     expose:
       - "3000"
     environment:
@@ -23,8 +17,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - camieo-net
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 15s
@@ -43,8 +35,6 @@ services:
     volumes:
       - camieo-data:/var/lib/mysql
       - ./sql/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
-    networks:
-      - camieo-net
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASS:-r00t_c4py}"]
       interval: 10s
@@ -54,7 +44,3 @@ services:
 
 volumes:
   camieo-data:
-
-networks:
-  camieo-net:
-    driver: bridge
