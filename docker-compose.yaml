@@ -21,6 +21,12 @@ services:
       retries: 3
     labels:
       - traefik.enable=true
+      # HTTP router — needed for Let's Encrypt HTTP-01 challenge
+      - traefik.http.routers.camieo-app-http.entrypoints=http
+      - traefik.http.routers.camieo-app-http.rule=Host(`camieo.com`) || Host(`www.camieo.com`)
+      - traefik.http.routers.camieo-app-http.priority=100
+      - traefik.http.routers.camieo-app-http.service=camieo-app-svc
+      # HTTPS router
       - traefik.http.routers.camieo-app-https.entrypoints=https
       - traefik.http.routers.camieo-app-https.rule=Host(`camieo.com`) || Host(`www.camieo.com`)
       - traefik.http.routers.camieo-app-https.priority=100
