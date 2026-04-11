@@ -2,8 +2,6 @@ services:
   app:
     build: ./app
     restart: unless-stopped
-    expose:
-      - "3000"
     environment:
       SERVICE_FQDN_APP: /
       NODE_ENV: production
@@ -21,6 +19,15 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.camieo-app-https.entrypoints=https
+      - traefik.http.routers.camieo-app-https.rule=Host(`camieo.com`) || Host(`www.camieo.com`)
+      - traefik.http.routers.camieo-app-https.priority=100
+      - traefik.http.routers.camieo-app-https.tls=true
+      - traefik.http.routers.camieo-app-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.camieo-app-https.service=camieo-app-svc
+      - traefik.http.services.camieo-app-svc.loadbalancer.server.port=3000
     networks:
       - internal
 
