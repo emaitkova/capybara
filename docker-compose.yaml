@@ -1,19 +1,16 @@
-version: "3.8"
 services:
   app:
     build: ./app
-    container_name: camieo-app
     restart: unless-stopped
-    expose:
-      - "3000"
     environment:
-      - NODE_ENV=production
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USER=${DB_USER:-camieo}
-      - DB_PASS=${DB_PASS:-capyb4r4_sw4rm}
-      - DB_NAME=${DB_NAME:-camieo}
-      - API_URL=${API_URL:-}
+      SERVICE_FQDN_APP: /
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: "${DB_USER:-camieo}"
+      DB_PASS: "${DB_PASS:-capyb4r4_sw4rm}"
+      DB_NAME: "${DB_NAME:-camieo}"
+      API_URL: "${API_URL:-}"
     depends_on:
       db:
         condition: service_healthy
@@ -22,16 +19,33 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      # HTTP → HTTPS redirect
+      - traefik.http.routers.camieo-app-http.entrypoints=http
+      - traefik.http.routers.camieo-app-http.rule=Host(`camieo.com`) || Host(`www.camieo.com`)
+      - traefik.http.routers.camieo-app-http.middlewares=redirect-to-https
+      # HTTPS router
+      - traefik.http.routers.camieo-app-https.entrypoints=https
+      - traefik.http.routers.camieo-app-https.rule=Host(`camieo.com`) || Host(`www.camieo.com`)
+      - traefik.http.routers.camieo-app-https.middlewares=gzip
+      - traefik.http.routers.camieo-app-https.tls=true
+      - traefik.http.routers.camieo-app-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.camieo-app-https.service=camieo-app
+      - traefik.http.services.camieo-app.loadbalancer.server.port=3000
+    networks:
+      - internal
 
   db:
     image: mysql:8.0
-    container_name: camieo-db
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS:-r00t_c4py}
-      - MYSQL_DATABASE=${DB_NAME:-camieo}
-      - MYSQL_USER=${DB_USER:-camieo}
-      - MYSQL_PASSWORD=${DB_PASS:-capyb4r4_sw4rm}
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASS:-r00t_c4py}"
+      MYSQL_DATABASE:      "${DB_NAME:-camieo}"
+      MYSQL_USER:          "${DB_USER:-camieo}"
+      MYSQL_PASSWORD:      "${DB_PASS:-capyb4r4_sw4rm}"
     volumes:
       - camieo-data:/var/lib/mysql
       - ./sql/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
@@ -41,6 +55,14 @@ services:
       timeout: 5s
       retries: 5
     command: --default-authentication-plugin=mysql_native_password
+    labels:
+      - traefik.enable=false
+    networks:
+      - internal
 
 volumes:
   camieo-data:
+
+networks:
+  internal:
+    driver: bridge
